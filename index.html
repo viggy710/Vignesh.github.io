@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vignesh Shankarappa, Workforce Planning Portfolio</title>
+<meta name="description" content="Workforce planning portfolio by Vignesh Shankarappa: Melbourne spring 2026 crowd forecast, staffing model and roster analysis.">
+<meta name="author" content="Vignesh Shankarappa">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+
+:root{
+  --bg:#ffffff; --card:#ffffff; --ink:#0b0b1a; --muted:#545a74; --line:#e4e6f2; --soft:#f2f3fb;
+  --actual:#e6007a; --actual-2:#ff7a00; --pred:#3a56f0; --good:#00996b; --good-soft:#e2f7ef; --bad:#e85d04; --bad-soft:#fff0e3;
+  --pop-1:#3a56f0; --pop-2:#e6007a; --pop-3:#ffc300;
+  --stage:#120e3a; --stage-ink:#ffffff; --stage-muted:#b9b6e6; --stage-line:#2c2766; --stage-pred:#8fa2ff; --stage-act:#ff3d9a;
+  --display:"Inter Tight","Inter","Segoe UI",system-ui,sans-serif; --body:"Inter","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#07071a; --card:#11112b; --ink:#f4f4ff; --muted:#a9abcc; --line:#25264a; --soft:#18193a;
+  --actual:#ff3d9a; --actual-2:#ffa133; --pred:#7f95ff; --good:#2ee6a6; --good-soft:#0d2b24; --bad:#ff8a3d; --bad-soft:#3a1f0e;
+  --stage:#0c0930; --stage-line:#2c2766; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#07071a; --card:#11112b; --ink:#f4f4ff; --muted:#a9abcc; --line:#25264a; --soft:#18193a;
+  --actual:#ff3d9a; --actual-2:#ffa133; --pred:#7f95ff; --good:#2ee6a6; --good-soft:#0d2b24; --bad:#ff8a3d; --bad-soft:#3a1f0e;
+  --stage:#0c0930; --stage-line:#2c2766; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:20;background:var(--bg)}
+.wrap{max-width:1200px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+:focus-visible{outline:2px solid var(--actual);outline-offset:3px;border-radius:8px}
+button{font:inherit;color:inherit;cursor:pointer}
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:18px}
+.who{display:flex;flex-direction:column;line-height:1.2}
+.who b{font-family:var(--display);font-size:1.05rem}
+.who span{font-size:.8rem;color:var(--muted)}
+.tabs{position:relative;display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:4px}
+.tabs a{position:relative;z-index:1;text-decoration:none;font-weight:600;font-size:.88rem;padding:9px 16px;border-radius:999px;color:var(--muted);min-height:40px;display:inline-flex;align-items:center;gap:8px;transition:color .25s}
+.tabs a[aria-current="page"]{color:var(--bg)}
+.tabs .ind{position:absolute;z-index:0;top:4px;bottom:4px;border-radius:999px;background:var(--ink);transition:left .45s cubic-bezier(.2,.9,.2,1.15),width .45s cubic-bezier(.2,.9,.2,1.15)}
+.tabs small{font-size:.72rem;opacity:.75}
+@media (max-width:620px){.tabs small{display:none}.tabs a{padding:9px 14px;white-space:nowrap}}
+.hs{overflow-x:auto;-webkit-overflow-scrolling:touch}@media (max-width:620px){#barBox{min-width:600px}}
+.contact{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:.82rem}
+.contact span{user-select:all}.contact a{color:var(--actual)}
+/* hero line */
+.hero{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:end;margin-bottom:16px}
+.hero h1{font-size:clamp(1.8rem,4.2vw,3rem);line-height:1.02;font-weight:800}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--pop-1),var(--actual) 55%,var(--actual-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);max-width:56ch}
+.hero{position:relative;isolation:isolate}
+.hero::before{content:"";position:absolute;z-index:-1;inset:-40px -10px -10px -10px;pointer-events:none;
+  background:radial-gradient(40% 70% at 8% 30%,color-mix(in srgb,var(--pop-1) 22%,transparent),transparent 70%),
+  radial-gradient(35% 60% at 55% 10%,color-mix(in srgb,var(--pop-2) 18%,transparent),transparent 70%),
+  radial-gradient(30% 60% at 92% 60%,color-mix(in srgb,var(--pop-3) 26%,transparent),transparent 70%);
+  filter:blur(8px);animation:glow 12s ease-in-out infinite alternate}
+@keyframes glow{to{transform:translate3d(0,8px,0) scale(1.04);filter:blur(14px) hue-rotate(20deg)}}
+@media (prefers-reduced-motion:reduce){.hero::before{animation:none}}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.kpi b{display:block;font-family:var(--display);font-size:1.5rem;line-height:1.1}
+.kpi span{font-size:.75rem;color:var(--muted)}
+/* bento */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.tile{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0;overflow:hidden;
+  transition:transform .35s cubic-bezier(.2,.9,.2,1),box-shadow .35s,border-color .35s}
+.tile:hover{transform:translateY(-3px);box-shadow:0 18px 40px -24px rgba(0,0,0,.35)}
+.tile.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,100%{box-shadow:0 0 0 0 transparent}25%{box-shadow:0 0 0 3px var(--actual)}}
+.s7{grid-column:span 7}.s5{grid-column:span 5}.s4{grid-column:span 4}.s6{grid-column:span 6}.s8{grid-column:span 8}.s12{grid-column:span 12}
+@media (max-width:900px){.s7,.s5,.s4,.s6,.s8{grid-column:span 12}}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--actual)}
+.chip i{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;background:var(--actual);color:var(--bg);font-size:.7rem}
+.tile h3{font-size:1.12rem;line-height:1.2}
+.tile .sub{font-size:.85rem;color:var(--muted)}
+.seg{display:inline-flex;flex-wrap:wrap;gap:3px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:transparent;font-size:.8rem;font-weight:600;padding:7px 10px;border-radius:9px;color:var(--muted);min-height:34px;transition:background .2s,color .2s}
+.seg button[aria-checked="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.78rem;color:var(--muted);list-style:none;margin:0;padding:0}
+.legend button{border:0;background:none;padding:2px 0;display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.78rem}
+.legend button[aria-pressed="false"]{opacity:.4;text-decoration:line-through}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px}
+.sw.hatch{background:repeating-linear-gradient(45deg,var(--pred) 0 2px,transparent 2px 5px);border:1px solid var(--pred)}
+.sw.act{background:var(--actual)}
+/* stage (particles) */
+.stage{background:radial-gradient(120% 90% at 0% 0%,#2a1f7a 0%,transparent 55%),radial-gradient(90% 80% at 100% 100%,#5b0b4a 0%,transparent 60%),var(--stage);color:var(--stage-ink);border-color:var(--stage-line)}
+.stage .sub,.stage .legend,.stage .legend button{color:var(--stage-muted)}
+.stage .seg{background:#ffffff0d;border-color:var(--stage-line)}
+.stage .seg button{color:var(--stage-muted)}
+.stage .seg button[aria-checked="true"]{background:#ffffff1a;color:var(--stage-ink)}
+.stage .sw.hatch{background:repeating-linear-gradient(45deg,var(--stage-pred) 0 2px,transparent 2px 5px);border-color:var(--stage-pred)}
+.stage .sw.act{background:var(--stage-act)}
+.canvasBox{position:relative;height:300px;border-radius:12px}
+.canvasBox canvas{position:absolute;inset:0;width:100%;height:100%}
+.lbls{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;transform:translate(-50%,-100%);text-align:center;font-size:.8rem;color:var(--stage-muted);white-space:nowrap;transition:top .9s cubic-bezier(.2,.9,.2,1),opacity .4s}
+.lbl b{display:block;font-family:var(--display);font-size:1.35rem;color:var(--stage-ink)}
+.lbl.a b{color:var(--stage-act)}
+.foot{font-size:.8rem}
+.stage .foot{color:var(--stage-muted)}
+.take{font-size:.85rem;border-left:3px solid var(--actual);padding-left:10px}
+.stage .take{border-color:var(--stage-act);color:var(--stage-ink)}
+/* svg charts */
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--body);font-size:12px;fill:var(--muted)}
+svg .v{fill:var(--ink);font-weight:600}
+svg .c{fill:var(--ink);font-weight:500}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:.78rem;padding:7px 10px;border-radius:10px;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;white-space:nowrap;z-index:3}
+.tip.on{opacity:1;transform:none}
+/* roster */
+.roster{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.day{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:8px;align-content:start}
+.day b{font-family:var(--display)}
+.day .dots{display:grid;grid-template-columns:repeat(12,1fr);gap:2px 3px}
+.man{display:inline-block;width:8px;height:16px;vertical-align:-3px}
+.stage .man.p{background:var(--stage-pred)}.man.a{background:var(--stage-act)}
+.man,.day .dots i,.people i{aspect-ratio:10/22;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='7 1 10 22'%3E%3Cpath d='M14 7h-4c-1.1 0-2 .9-2 2v6h2v7h4v-7h2V9c0-1.1-.9-2-2-2zm-2-1c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='7 1 10 22'%3E%3Cpath d='M14 7h-4c-1.1 0-2 .9-2 2v6h2v7h4v-7h2V9c0-1.1-.9-2-2-2zm-2-1c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2z'/%3E%3C/svg%3E") center/contain no-repeat}
+.day .dots i{background:var(--line);transform:scale(0) translateY(6px);transform-origin:bottom;transition:transform .45s cubic-bezier(.2,1.6,.4,1),background .3s}
+.man.p,.day .dots i.p{background:var(--pred);-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='7 1 10 22'%3E%3Cpath d='M14 7h-4c-1.1 0-2 .9-2 2v6h2v7h4v-7h2V9c0-1.1-.9-2-2-2zm-2-1c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2z' fill='none' stroke='black' stroke-width='1.3'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='7 1 10 22'%3E%3Cpath d='M14 7h-4c-1.1 0-2 .9-2 2v6h2v7h4v-7h2V9c0-1.1-.9-2-2-2zm-2-1c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2z' fill='none' stroke='black' stroke-width='1.3'/%3E%3C/svg%3E");transform:none}
+.day .dots i.a{background:var(--actual);transform:none}
+.day .dots i.x{background:var(--bad);transform:none;animation:hop .6s ease 2}
+@keyframes hop{50%{transform:translateY(-4px)}}
+.day .fig{font-size:.78rem;display:grid;gap:2px}
+/* calculator people */
+.people{display:grid;grid-template-columns:repeat(26,1fr);gap:2px 3px}
+.people i{background:var(--line);transform-origin:bottom;transition:background .25s,transform .35s cubic-bezier(.2,1.6,.4,1)}
+.people i.on{background:linear-gradient(180deg,var(--actual),var(--actual-2));transform:scale(1.08)}
+.big{font-family:var(--display);font-size:2.2rem;font-weight:800;line-height:1}
+input[type=range]{width:100%;accent-color:var(--actual);min-height:30px}
+/* stakeholders */
+.say{min-height:96px;font-size:.98rem;line-height:1.5;padding:12px 14px;border-radius:12px;background:var(--soft);border:1px solid var(--line)}
+.say b{color:var(--actual)}
+.caret{display:inline-block;width:2px;height:1em;background:var(--actual);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+/* lessons */
+.lessons{display:grid;gap:8px}
+.lesson{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:10px;border-radius:12px;background:var(--soft);border:1px solid var(--line)}
+.lesson .n{font-family:var(--display);font-weight:800;font-size:1.25rem;min-width:66px}
+.lesson .n.bad{color:var(--bad)}.lesson .n.good{color:var(--good)}
+.lesson p{font-size:.85rem}
+/* proof view */
+.req{display:grid;gap:10px}
+.rq{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.rq > button{width:100%;border:0;background:none;text-align:left;display:grid;grid-template-columns:34px 1fr auto 18px;gap:12px;align-items:center;padding:14px 16px;min-height:56px}
+@media (max-width:620px){.rq > button{grid-template-columns:28px 1fr 18px}.rq > button .pf{display:none}}
+.rq > button .k{font-family:var(--display);font-weight:800;color:var(--actual);font-size:1.2rem}
+.rq > button b{font-family:var(--display);font-size:1.02rem}
+.rq > button .pf{font-size:.78rem;color:var(--muted);text-align:right}
+.rq > button svg{width:18px;transition:transform .35s}
+.rq[open] > button svg{transform:rotate(180deg)}
+.rq .body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.9,.2,1)}
+.rq[open] .body{grid-template-rows:1fr}
+.rq .body > div{overflow:hidden}
+.rq .in{padding:0 16px 16px 62px;display:grid;gap:10px}
+@media (max-width:620px){.rq .in{padding-left:16px}}
+.ev{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.ev div{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:.85rem}
+.ev div b{display:block;font-family:var(--display);font-size:1.2rem}
+.go{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 12px;font-size:.8rem;font-weight:600;width:max-content;min-height:36px}
+.go:hover{border-color:var(--actual);color:var(--actual)}
+.xl{font-family:var(--mono);font-size:.82rem;background:var(--stage);color:var(--stage-ink);border-radius:12px;padding:12px;display:grid;gap:6px;overflow-x:auto}
+.xl .cell{color:var(--stage-muted)}
+.xl .f{color:var(--stage-act);white-space:pre}
+.loop{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.loop span{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-weight:600;font-size:.82rem;transition:background .3s,color .3s,border-color .3s}
+.loop span.on{background:var(--actual);color:var(--bg);border-color:var(--actual)}
+.loop em{font-style:normal;color:var(--muted)}
+.view[hidden]{display:none!important}
+.reveal{opacity:1}
+.js .reveal{opacity:0;transform:translateY(14px) scale(.985);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.9,.2,1)}
+.js .reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.js .reveal{opacity:1;transform:none;transition:none}.tile,.tile:hover{transform:none;transition:none}.day .dots i,.people i{transition:none}}
+.srcs{font-size:.75rem;color:var(--muted);margin-top:14px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.srcs a{color:var(--muted)}
+</style>
+
+<div class="wrap">
+<div class="bar">
+  <div class="who"><b>Vignesh Shankarappa</b><span>Workforce Planning Analyst application · Crown Melbourne</span></div>
+  <nav class="tabs" aria-label="Pages"><span class="ind" aria-hidden="true"></span>
+    <a href="#dashboard" data-v="dashboard">1 · The work <small>7 duties</small></a>
+    <a href="#proof" data-v="proof">2 · The proof <small>6 requirements</small></a></nav>
+  <div class="contact"><span>vigneshshankarappa@gmail.com</span><span>+61 416 650 028</span></div>
+</div>
+
+
+<main class="view" id="v-dashboard">
+<div class="hero reveal">
+  <div style="display:grid;gap:10px">
+    <h1>I predicted Crown's spring season, <em>then checked it against reality.</em></h1>
+    <p>Brownlow to 30 November. Public crowd data from 2019–2025 predicts 2026, real 2026 crowds check it, and a simple rule turns guests into staff. Every tile below is one duty from the role.</p>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><b class="num" data-count="4" data-suf=" of 6">4 of 6</b><span>days predicted within 5%</span></div>
+    <div class="kpi"><b class="num" data-count="130">130</b><span>staff, sold-out Brownlow</span></div>
+    <div class="kpi"><b class="num" data-count="15.1" data-dec="1" data-pre="+" data-suf="%">+15.1%</b><span>more Cup Day racegoers vs 2025</span></div>
+  </div>
+</div>
+
+<div class="bento">
+  
+  <section class="tile stage s7 reveal" id="t1" aria-labelledby="h1t">
+    <span class="chip"><i>1</i>Workforce forecasts</span>
+    <h3 id="h1t">Predicted vs actual crowd, 2026</h3>
+    <p class="sub">Each figure = 1,000 people. Pick a day and watch the crowd walk into place.</p>
+    <div class="seg" role="radiogroup" aria-label="Day" id="dayPick"></div>
+    <ul class="legend"><li><span class="man p"></span>&nbsp;Predicted (from 2022–25 growth)</li><li><span class="man a"></span>&nbsp;Actual 2026</li></ul>
+    <div class="canvasBox" id="stageBox"><canvas id="stageCv" role="img" aria-label="Predicted and actual crowd shown as people figures"></canvas><div class="lbls" id="stageLbls"></div></div>
+    <p class="take" id="stageTake"></p>
+  </section>
+
+  
+  <section class="tile s5 reveal" id="t2" aria-labelledby="h2t">
+    <span class="chip"><i>2</i>Trends & performance metrics</span>
+    <h3 id="h2t">Melbourne Cup crowds, 2019–2026</h3>
+    <p class="sub">Grey = past crowds · dashed blue = my prediction · pink = what happened.</p>
+    <div style="position:relative"><svg id="trendSvg" role="img" aria-label="Melbourne Cup crowd by year with 2026 predicted and actual"></svg></div>
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><b class="num">+4.6%</b><span>avg growth a year, 2022–25</span></div>
+      <div class="kpi"><b class="num">88,217</b><span>predicted 2026</span></div>
+      <div class="kpi"><b class="num" style="color:var(--actual)">97,112</b><span>actual 2026 (+10.1%)</span></div>
+    </div>
+  </section>
+
+  
+  <section class="tile s8 reveal" id="t3" aria-labelledby="h3t">
+    <span class="chip"><i>3</i>Reporting & dashboards</span>
+    <h3 id="h3t">Staff to roster for every 100 rostered in 2025</h3>
+    <p class="sub">Crowd change turned into staff. Dotted line = 100, same as 2025. Hover or use arrow keys; click the legend to hide a series.</p>
+    <ul class="legend" id="barLegend"><li><button aria-pressed="true" data-s="0"><span class="sw hatch"></span>Predicted</button></li><li><button aria-pressed="true" data-s="1"><span class="sw act"></span>Actual</button></li></ul>
+    <div class="hs"><div style="position:relative" id="barBox" tabindex="0" role="group" aria-label="Staff per 100 chart. Use left and right arrows."><svg id="barSvg"></svg><div class="tip" id="barTip"></div></div></div>
+    <p class="take">Cup Day needed <b>116</b> staff per 100, not the <b>105</b> predicted. Cox Plate needed <b>158</b>: it moved to Flemington.</p>
+  </section>
+
+  
+  <section class="tile s4 reveal" id="t5" aria-labelledby="h5t">
+    <span class="chip"><i>5</i>Workforce modelling</span>
+    <h3 id="h5t">Guests → staff, live</h3>
+    <div class="seg" role="radiogroup" aria-label="Event type" id="modePick"><button role="radio" aria-checked="true" data-k="10">VIP · 1 per 10</button><button role="radio" aria-checked="false" data-k="25">Normal · 1 per 25</button></div>
+    <label for="gs" class="sub">Guests: <b class="num" id="gsOut" style="color:var(--ink)">1,300</b></label>
+    <input id="gs" type="range" min="100" max="1300" step="50" value="1300">
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="big num" id="stOut">130</span><span class="sub" id="stTxt">staff · 780 staff-hours (6 h shifts)</span></div>
+    <div class="people" id="people" aria-hidden="true"></div>
+    <p class="foot muted">Each figure = 1 staff member (up to 130). Rule from my 5 years on Crown and MCG event floors.</p>
+  </section>
+
+  
+  <section class="tile s6 reveal" id="t4" aria-labelledby="h4t">
+    <span class="chip"><i>4</i>Rosters · Virtual Roster</span>
+    <h3 id="h4t">Cup week 2026 roster, per 100 staff from 2025</h3>
+    <p class="sub">Blue outline = predicted plan · pink = staff the real crowd needed · orange = short if we'd rostered the prediction. Each figure = 2 staff.</p>
+    <div class="roster" id="roster"></div>
+    <p class="foot muted">Built as roster logic; Virtual Roster is the one tool I'd learn first, in week one.</p>
+  </section>
+
+  
+  <section class="tile s6 reveal" id="t6" aria-labelledby="h6t">
+    <span class="chip"><i>6</i>Partner with stakeholders</span>
+    <h3 id="h6t">Same numbers, told four ways</h3>
+    <div class="seg" role="radiogroup" aria-label="Audience" id="audPick">
+      <button role="radio" aria-checked="true" data-a="0">Executive</button><button role="radio" aria-checked="false" data-a="1">Events manager</button><button role="radio" aria-checked="false" data-a="2">Finance</button><button role="radio" aria-checked="false" data-a="3">Floor team</button></div>
+    <p class="say" id="say" aria-live="polite"></p>
+  </section>
+
+  
+  <section class="tile s12 reveal" id="t7" aria-labelledby="h7t">
+    <span class="chip"><i>7</i>Productivity & efficiency</span>
+    <h3 id="h7t">What the misses taught me, and what I'd change</h3>
+    <div class="lessons" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+      <div class="lesson"><span class="n bad num">+10.1%</span><p><b>Melbourne Cup beat the prediction.</b> Action: watch ticket sales in the last 2 weeks and add staff when they run ahead.</p></div>
+      <div class="lesson"><span class="n bad num">+49.8%</span><p><b>Cox Plate moved to Flemington.</b> Action: check for venue or format changes before trusting last year's trend.</p></div>
+      <div class="lesson"><span class="n good num">±5%</span><p><b>Caulfield, Derby, Oaks, Grand Final landed close.</b> Action: roster these from the prediction early and lock leave.</p></div>
+    </div>
+  </section>
+</div>
+</main>
+
+
+<main class="view" id="v-proof" hidden>
+<div class="hero reveal" style="grid-template-columns:1fr">
+  <h1>Six requirements. <em>Six pieces of evidence.</em></h1>
+  <p>Open any row. Each one points to real work: my two years as a data analyst, my data science internship, my 5 years on Crown and MCG event floors, and this project.</p>
+</div>
+<div class="req" id="reqs"></div>
+<p class="srcs" id="srcs"></p>
+</main>
+</div>
+
+<script>
+document.documentElement.classList.add('js');
+const PD = {"years": [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2022, 2023, 2024, 2025], "hist": {"Caulfield Cup": [33056, 32000, 30000, null, 30000, 30000, 28000, 24289, 25121, 25676, 28000], "Cox Plate": [30986, 28216, 27620, 26000, 32617, 38035, 24648, 19000, 21021, 20000, 22000], "Derby Day": [95223, 90244, 85943, 90136, 87526, 91194, 80214, 71327, 73056, 81612, 86343], "Melbourne Cup": [104169, 100794, 101015, 97479, 90536, 83471, 81408, 73816, 84492, 91168, 84373], "Crown Oaks Day": [66757, 64430, 57560, 60888, 63673, 61355, 57296, 45046, 46596, 50873, 51239], "Stakes Day": [65047, 70051, 68711, 70351, 68873, 67567, 57268, 54019, 58021, 62022, 65012]}, "fc": {"Caulfield Cup": {"g": 4.9, "f": 29359, "a": 30051, "d": 2.4, "c": 4.9, "ca": 7.3, "note": ""}, "Cox Plate": {"g": 5.0, "f": 23102, "a": 34617, "d": 49.8, "c": 5.0, "ca": 57.3, "note": "Moved from Moonee Valley to Flemington in 2026 (bigger venue), so last years' trend could not predict it."}, "Derby Day": {"g": 6.6, "f": 92021, "a": 88146, "d": -4.2, "c": 6.6, "ca": 2.1, "note": ""}, "Melbourne Cup": {"g": 4.6, "f": 88217, "a": 97112, "d": 10.1, "c": 4.6, "ca": 15.1, "note": ""}, "Crown Oaks Day": {"g": 4.4, "f": 53487, "a": 52217, "d": -2.4, "c": 4.4, "ca": 1.9, "note": ""}, "Stakes Day": {"g": 6.4, "f": 69153, "a": null, "d": null, "c": 6.4, "ca": null, "note": ""}}, "gf": {"2016": 99981, "2017": 100021, "2018": 100022, "2022": 100024, "2023": 100024, "2024": 100013, "2025": 100022, "2026": 100023}};
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>Math.round(n).toLocaleString('en-AU');
+const pct=v=>(v>0?'+':'')+v.toFixed(1)+'%';
+const ease=t=>1-Math.pow(1-t,3);
+function seg(el,cb){const bs=[...el.querySelectorAll('button')];bs.forEach(b=>b.onclick=()=>{bs.forEach(x=>x.setAttribute('aria-checked',x===b));cb(b);});
+  el.addEventListener('keydown',e=>{const i=bs.findIndex(b=>b.getAttribute('aria-checked')==='true');const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(d){const j=(i+d+bs.length)%bs.length;bs[j].click();bs[j].focus();e.preventDefault();}});}
+function countUp(el){const to=+el.dataset.count,dec=+(el.dataset.dec||0),pre=el.dataset.pre||'',suf=el.dataset.suf||'';
+  if(RM){el.textContent=pre+to.toFixed(dec)+suf;return;}const t0=performance.now(),D=1200;
+  (function f(t){const k=Math.min(1,(t-t0)/D);el.textContent=pre+(to*ease(k)).toLocaleString('en-AU',{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf;if(k<1)requestAnimationFrame(f);})(t0);}
+
+/* ---------- data ---------- */
+const FC=PD.fc; FC['AFL Grand Final']={f:100022,a:100023,d:0.0,c:0,ca:0};
+const DAYS=['Melbourne Cup','Derby Day','Cox Plate','Crown Oaks Day','Caulfield Cup','AFL Grand Final','Stakes Day'];
+
+/* ---------- views ---------- */
+function setView(v){if(v!=='proof')v='dashboard';$$('.view').forEach(x=>x.hidden=x.id!=='v-'+v);
+  $$('.tabs a').forEach(a=>a.setAttribute('aria-current',a.dataset.v===v?'page':'false'));moveInd();reveal();
+  if(v==='dashboard'){requestAnimationFrame(()=>{stage.resize();drawAll();});}}
+function moveInd(){const a=$('.tabs a[aria-current="page"]'),ind=$('.tabs .ind');if(!a)return;ind.style.left=a.offsetLeft+'px';ind.style.width=a.offsetWidth+'px';}
+function go(v){const run=()=>setView(v);if(document.startViewTransition&&!RM)document.startViewTransition(run);else run();}
+window.addEventListener('hashchange',()=>go(location.hash.slice(1)));
+/* reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');e.target.querySelectorAll('[data-count]').forEach(countUp);io.unobserve(e.target);}}),{threshold:.12});
+function reveal(){$$('.view:not([hidden]) .reveal').forEach((el,i)=>{if(!el.classList.contains('in')){el.style.transitionDelay=(RM?0:Math.min(i,8)*60)+'ms';io.observe(el);}});}
+
+/* ---------- 1. particle stage ---------- */
+const stage=(()=>{const box=$('#stageBox'),cv=$('#stageCv'),ctx=cv.getContext('2d'),L=$('#stageLbls');let W=0,H=0,dpr=1,P=[],cur=null,t0=0;
+  const N=200; for(let i=0;i<N;i++)P.push({x:Math.random(),y:Math.random(),tx:0,ty:0,sx:0,sy:0,on:0,col:0,ph:Math.random()*6.28,d:Math.random()*.35});
+  function resize(){const r=box.getBoundingClientRect();dpr=Math.min(2,devicePixelRatio||1);W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);if(cur)layout(cur,true);}
+  function layout(day,instant){cur=day;const f=FC[day];const pred=Math.round(f.f/1000),act=f.a?Math.round(f.a/1000):0;
+    const cols=10,gy=Math.max(7,Math.min(19,(H-78)/10.4,W*0.3/10/0.62)),gap=gy*0.62,dot=gy*0.9,colW=cols*gap,cx=[W*0.32,W*0.68],base=H-24;
+    let k=0;const place=(n,c,side)=>{for(let i=0;i<n&&k<N;i++,k++){const p=P[k];p.sx=p.x;p.sy=p.y;p.tx=(cx[side]-colW/2+(i%cols)*gap+gap/2)/W;p.ty=(base-Math.floor(i/cols)*gy)/H;p.on=1;p.col=side;p.r=dot/2;}};
+    place(pred,0,0);place(act,1,1);for(;k<N;k++){const p=P[k];p.sx=p.x;p.sy=p.y;p.tx=Math.random();p.ty=0.1+Math.random()*0.32;p.on=0;}
+    t0=performance.now()-(instant||RM?5000:0);
+    const top=n=>base-Math.ceil(n/cols)*gy-4;
+    L.innerHTML=`<div class="lbl" style="left:${cx[0]}px;top:${top(pred)}px"><b class="num">${fmt(f.f)}</b>Predicted</div>`+
+      (f.a?`<div class="lbl a" style="left:${cx[1]}px;top:${top(act)}px"><b class="num">${fmt(f.a)}</b>Actual · ${pct(f.d)}</div>`:`<div class="lbl" style="left:${cx[1]}px;top:${base-10}px"><b>Sat 7 Nov</b>Not run yet</div>`);
+    $('#stageTake').innerHTML=TAKE[day];}
+  const MAN=new Path2D('M14 7h-4c-1.1 0-2 .9-2 2v6h2v7h4v-7h2V9c0-1.1-.9-2-2-2zm-2-1c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2z');
+  /* draw a person (Material Icons 'man', Apache 2.0) with feet at (x,y), height h; swing>0 animates a walking sway */
+  function man(x,y,h,col,outline,alpha,sw){const s=h/21;ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);
+    if(sw)ctx.rotate(Math.sin(sw)*0.12);ctx.scale(s,s);ctx.translate(-12,-22);
+    if(outline){ctx.strokeStyle=col;ctx.lineWidth=1.25/s*0.9;ctx.stroke(MAN);}else{ctx.fillStyle=col;ctx.fill(MAN);}ctx.restore();}
+  function frame(t){ctx.clearRect(0,0,W,H);const pc=css('--stage-pred'),ac=css('--stage-act');
+    ctx.strokeStyle=css('--stage-line');ctx.beginPath();ctx.moveTo(16,H-22+7);ctx.lineTo(W-16,H-22+7);ctx.stroke();
+    P.forEach(p=>{const k=Math.max(0,Math.min(1,((t-t0)/1100)-p.d));const e=k<1?(1-Math.pow(1-k,4))*(1+0.06*Math.sin(k*9)*(1-k)):1;
+      p.x=p.sx+(p.tx-p.sx)*e;p.y=p.sy+(p.ty-p.sy)*e;let x=p.x*W,y=p.y*H;
+      if(!p.on){/* background crowd strolling across */const wx=((p.tx*W+t*0.012*(p.ph>3?1:-1)+p.ph*400)%(W+40)+W+40)%(W+40)-20;
+        man(wx,p.ty*H+Math.abs(Math.sin(t/220+p.ph))*-1.5,9,pc,0,.22,t/220+p.ph);return;}
+      const moving=k<1,h=p.r*2||10;const hop=moving?-Math.abs(Math.sin(k*Math.PI*5))*h*0.25:0;
+      man(x,y+hop,h,p.col===0?pc:ac,p.col===0?1:0,1,moving?(t/90+p.ph):0);});
+    ctx.globalAlpha=1;if(!RM||t-t0<1600)requestAnimationFrame(frame);else requestAnimationFrame(frame);}
+  return {resize,layout,start(){requestAnimationFrame(frame);}};})();
+const TAKE={
+ 'Melbourne Cup':'Predicted <b>88,217</b>, actual <b>97,112</b>: <b>+10.1%</b>. The biggest Cup Day crowd since 2016.',
+ 'Derby Day':'Predicted <b>92,021</b>, actual <b>88,146</b>: <b>−4.2%</b>, within 5%.',
+ 'Cox Plate':'Predicted <b>23,102</b>, actual <b>34,617</b>: <b>+49.8%</b>. The race moved to Flemington in 2026.',
+ 'Crown Oaks Day':'Predicted <b>53,487</b>, actual <b>52,217</b>: <b>−2.4%</b>, within 5%.',
+ 'Caulfield Cup':'Predicted <b>29,359</b>, actual <b>30,051</b>: <b>+2.4%</b>, within 5%.',
+ 'AFL Grand Final':'Predicted <b>100,022</b> (full MCG), actual <b>100,023</b>: spot on.',
+ 'Stakes Day':'Predicted <b>69,153</b>. It runs on Saturday 7 November: this prediction is the plan.'};
+$('#dayPick').innerHTML=DAYS.map((d,i)=>`<button role="radio" aria-checked="${i===0}" data-d="${d}">${d.replace('AFL ','').replace('Crown ','')}</button>`).join('');
+seg($('#dayPick'),b=>stage.layout(b.dataset.d));
+
+/* ---------- 2. trend line (draw-on animation) ---------- */
+function trend(){const v=PD.hist['Melbourne Cup'],yrs=PD.years,f=FC['Melbourne Cup'];
+  const X=[2019,2022,2023,2024,2025,2026],pts=[2019,2022,2023,2024,2025].map(y=>v[yrs.indexOf(y)]);
+  const W=520,H=230,L=12,R=14,T=26,B=26,mn=65000,mx=102000;const x=i=>L+i*(W-L-R)/5,y=val=>H-B-(val-mn)/(mx-mn)*(H-T-B);
+  let g='';X.forEach((yr,i)=>g+=`<text class="c" x="${x(i)}" y="${H-6}" text-anchor="middle">${yr}</text>`);
+  g+=`<path d="M${x(0)},${y(pts[0])}L${x(1)},${y(pts[1])}" stroke="${css('--pred')}" stroke-dasharray="2 5" fill="none" stroke-width="1.5"/>`;
+  g+=`<path class="draw" d="${pts.slice(1).map((p,i)=>(i?'L':'M')+x(i+1)+','+y(p)).join('')}" stroke="${css('--muted')}" stroke-width="2.5" fill="none"/>`;
+  g+=`<path class="draw2" d="M${x(4)},${y(pts[4])}L${x(5)},${y(f.f)}" stroke="${css('--pred')}" stroke-width="2" stroke-dasharray="6 5" fill="none"/>`;
+  pts.forEach((p,i)=>g+=`<circle cx="${x(i)}" cy="${y(p)}" r="4.5" fill="${css('--muted')}"/><text class="v" x="${x(i)}" y="${y(p)-10}" text-anchor="middle">${(p/1000).toFixed(1)}k</text>`);
+  g+=`<circle cx="${x(5)}" cy="${y(f.f)}" r="6" fill="${css('--card')}" stroke="${css('--pred')}" stroke-width="2.5"/><text class="v" x="${x(5)+6}" y="${y(f.f)+26}" text-anchor="end">Predicted 88.2k</text>`;
+  g+=`<circle class="pop" cx="${x(5)}" cy="${y(f.a)}" r="7" fill="${css('--actual')}"/><text class="v" x="${x(5)-10}" y="${y(f.a)-4}" text-anchor="end" style="fill:${css('--actual')}">Actual 97.1k</text>`;
+  const s=$('#trendSvg');s.setAttribute('viewBox',`0 0 ${W} ${H}`);s.innerHTML=g;
+  if(!RM)s.querySelectorAll('.draw,.draw2').forEach((p,i)=>{const l=p.getTotalLength();p.style.strokeDasharray=i?'6 5':l;if(!i){p.style.strokeDashoffset=l;p.getBoundingClientRect();p.style.transition='stroke-dashoffset 1.4s cubic-bezier(.2,.9,.2,1)';p.style.strokeDashoffset=0;}});}
+
+
+const BD=['Melbourne Cup','Derby Day','Cox Plate','Crown Oaks Day','Caulfield Cup','AFL Grand Final','Stakes Day'];
+const per=v=>v==null?null:Math.ceil(100*(1+v/100));
+const BV=[BD.map(d=>per(FC[d].c)),BD.map(d=>per(FC[d].ca))];
+let showS=[true,true],act=null,barsDrawn=false;
+function spring(t){if(t>=1)return 1;return 1-Math.exp(-6*t)*Math.cos(10*t);}
+function bars(anim){const W=760,H=270,L=34,R=8,T=26,B=40,mx=170;const svg=$('#barSvg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const cw=(W-L-R)/BD.length,vis=[0,1].filter(i=>showS[i]),bw=Math.min(30,cw*0.62/Math.max(1,vis.length));
+  const y=v=>H-B-v/mx*(H-T-B);
+  let g=`<defs><pattern id="hp" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${css('--card')}"/><line x1="0" y1="0" x2="0" y2="6" stroke="${css('--pred')}" stroke-width="2.4"/></pattern></defs>`;
+  g+=`<rect id="band" x="0" y="${T-8}" width="${cw}" height="${H-B-T+8}" rx="10" fill="${css('--ink')}" opacity="0"/>`;
+  [0,50,100,150].forEach(t=>g+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="${css('--line')}" stroke-dasharray="${t===100?'':'3 4'}"/><text x="${L-6}" y="${y(t)+4}" text-anchor="end" font-size="11">${t}</text>`);
+  
+  BD.forEach((d,ci)=>{const cx=L+cw*ci+cw/2;g+=`<text class="c" x="${cx}" y="${H-B+18}" text-anchor="middle" font-size="12">${d.replace('AFL ','').replace('Crown ','')}</text>`;
+    vis.forEach((si,j)=>{const v=BV[si][ci],x0=cx-bw*vis.length/2-(vis.length-1)*2+j*(bw+4);
+      if(v==null){g+=`<text x="${x0+bw/2}" y="${y(0)-6}" text-anchor="middle" font-size="10">n/a</text>`;return;}
+      g+=`<rect class="b" data-ci="${ci}" data-v="${v}" x="${x0}" y="${y(v)}" width="${bw}" height="${y(0)-y(v)}" rx="5" fill="${si?css('--actual'):'url(#hp)'}" stroke="${si?'none':css('--pred')}" stroke-opacity=".6"/>`;
+      g+=`<text class="v bl" data-ci="${ci}" x="${x0+bw/2}" y="${y(v)-6}" text-anchor="middle" font-size="11.5">${v}</text>`;});});
+  svg.innerHTML=g;
+  const rects=[...svg.querySelectorAll('rect.b')],labs=[...svg.querySelectorAll('text.bl')];
+  if(anim&&!RM){const t0=performance.now();rects.forEach(r=>{r.dataset.y=r.getAttribute('y');r.dataset.h=r.getAttribute('height');r.setAttribute('height',0);r.setAttribute('y',y(0));});labs.forEach(l=>l.style.opacity=0);
+    (function f(t){let done=true;rects.forEach((r,i)=>{const k=Math.max(0,(t-t0-r.dataset.ci*70-i%2*40)/900);const e=spring(k);if(k<1)done=false;const h=+r.dataset.h*e;r.setAttribute('height',Math.max(0,h));r.setAttribute('y',y(0)-Math.max(0,h));});
+      labs.forEach(l=>{const k=(t-t0-l.dataset.ci*70)/900;l.style.opacity=Math.max(0,Math.min(1,(k-.4)*3));});if(!done)requestAnimationFrame(f);})(t0);}
+  const box=$('#barBox'),tip=$('#barTip'),band=svg.querySelector('#band');
+  const show=ci=>{act=ci;if(ci==null){band.setAttribute('opacity',0);tip.classList.remove('on');rects.forEach(r=>r.style.opacity=1);return;}
+    band.setAttribute('x',L+cw*ci+4);band.setAttribute('width',cw-8);band.setAttribute('opacity',.05);rects.forEach(r=>r.style.opacity=+r.dataset.ci===ci?1:.3);
+    const d=BD[ci],p=BV[0][ci],a=BV[1][ci];tip.innerHTML=`<b>${d}</b><br>Predicted: ${p} per 100<br>Actual: ${a==null?'not run yet':a+' per 100'}`;
+    const bx=box.getBoundingClientRect(),sx=bx.width/W;tip.style.left=Math.min(bx.width-170,(L+cw*ci+cw)*sx)+'px';tip.style.top='8px';tip.classList.add('on');};
+  svg.onpointermove=e=>{const bx=svg.getBoundingClientRect(),x=(e.clientX-bx.left)*W/bx.width;const ci=Math.floor((x-L)/cw);show(ci>=0&&ci<BD.length?ci:null);};
+  svg.onpointerleave=()=>show(null);
+  box.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const n=act==null?0:Math.max(0,Math.min(BD.length-1,act+(e.key==='ArrowRight'?1:-1)));show(n);e.preventDefault();}if(e.key==='Escape')show(null);};
+  box.onblur=()=>show(null);}
+$$('#barLegend button').forEach(b=>b.onclick=()=>{const i=+b.dataset.s;if(showS.filter(Boolean).length===1&&showS[i])return;showS[i]=!showS[i];b.setAttribute('aria-pressed',showS[i]);bars(true);});
+
+/* ---------- 4. roster ---------- */
+const RD=[['Tue 3 Nov','Melbourne Cup'],['Thu 5 Nov','Crown Oaks Day'],['Sat 7 Nov','Stakes Day']];
+function roster(){$('#roster').innerHTML=RD.map(([dl,d])=>{const p=per(FC[d].c),a=per(FC[d].ca);
+  return `<div class="day"><b>${dl}</b><span class="sub" style="margin-top:-6px">${d.replace('Crown ','')}</span><div class="dots" data-p="${p}" data-a="${a??''}">${'<i></i>'.repeat(60)}</div>
+  <div class="fig num"><span>Predicted plan: <b>${p}</b></span><span>${a==null?'Actual: runs Saturday':`Actual need: <b style="color:var(--actual)">${a}</b> ${a>p?`<span style="color:var(--bad)">(short ${a-p})</span>`:`<span style="color:var(--good)">(${p-a} spare)</span>`}`}</span></div></div>`;}).join('');
+  $$('#roster .dots').forEach((el,di)=>{const p=Math.round(+el.dataset.p/2),a=el.dataset.a?Math.round(+el.dataset.a/2):null;const is=[...el.children];
+    is.forEach((i,k)=>{const cls=a==null?(k<p?'p':''):(k<Math.min(p,a)?'a':k<a?'x':k<p?'p':'');setTimeout(()=>{if(cls)i.className=cls;},RM?0:300+di*200+k*14);});});}
+
+/* ---------- 5. calculator ---------- */
+let per1=10;$('#people').innerHTML='<i></i>'.repeat(130);
+function calc(){const g=+$('#gs').value,n=Math.ceil(g/per1);$('#gsOut').textContent=fmt(g);$('#stOut').textContent=n;$('#stTxt').textContent=`staff · ${fmt(n*6)} staff-hours (6 h shifts)`;
+  $$('#people i').forEach((i,k)=>i.classList.toggle('on',k<n));}
+seg($('#modePick'),b=>{per1=+b.dataset.k;calc();});$('#gs').oninput=calc;
+
+/* ---------- 6. stakeholders ---------- */
+const SAY=[
+ 'Our crowd forecast was within 5% on <b>4 of 6</b> big days. Melbourne Cup ran <b>10% above</b>, so next year we add a late ticket-sales check. Cost of getting it right: rostering the peaks early.',
+ 'For a VIP night like the Brownlow, plan <b>1 staff per 10 guests</b>: a full Palladium of 1,300 is <b>130 staff</b>. A normal 900-guest awards night is <b>36</b>. Confirm guest numbers 2 weeks out.',
+ 'A sold-out Brownlow is about <b>780 staff-hours</b>. On Cup Day the crowd was up <b>15.1%</b> on 2025, so labour hours should rise by about the same; I would track hours against that every week.',
+ 'Cup week is our busiest week: <b>5 big days</b> in 2026. Expect about <b>16 more people</b> for every 100 who worked Cup Day last year. Leave is held that week.'];
+let typing=0;
+function say(i){const el=$('#say'),html=SAY[i];const id=++typing;if(RM){el.innerHTML=html;return;}
+  const plain=html.replace(/<[^>]+>/g,'');let n=0;(function tick(){if(id!==typing)return;n+=3;if(n>=plain.length){el.innerHTML=html;return;}el.innerHTML=plain.slice(0,n)+'<span class="caret"></span>';setTimeout(tick,16);})();}
+seg($('#audPick'),b=>say(+b.dataset.a));
+
+/* ---------- proof view ---------- */
+const CHEV='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8l5 5 5-5"/></svg>';
+const REQ=[
+ {t:'Experience in workforce planning, analytics or business analysis',pf:'Analyst + 5 yrs Crown & MCG',ev:[['2 years','Data Analyst, Gerbail Enterprises'],['6 months','Data Science Intern, Tech Mahindra'],['5 years','Crown Melbourne & MCG event floors']],tile:'t1'},
+ {t:'Advanced Excel and reporting capabilities',pf:'Workbook, all formulas',ev:[['156','formulas in the project workbook, zero errors'],['+15%','revenue from my Excel models & Power BI dashboards at Gerbail'],['Power Query','PivotTables, VBA, financial models']],xl:true,tile:'t3'},
+ {t:'Strong analytical and problem-solving skills',pf:'Found why 2 days missed',ev:[['+49.8%','Cox Plate miss traced to a venue change'],['+10.1%','Cup miss traced to late demand'],['−10%','operating costs cut with scenario analysis at Gerbail']],tile:'t7'},
+ {t:'Ability to communicate insights to a variety of stakeholders',pf:'4 audiences, 1 dataset',ev:[['4 ways','Executive, events, finance, floor team (tile 6)'],['Monthly','performance summaries to leadership at Gerbail'],['Every shift','briefing F&B teams at Crown and the MCG']],tile:'t6'},
+ {t:'Experience with forecasting, workforce metrics or data modelling',pf:'4 of 6 within 5%',ev:[['+18%','sales forecast accuracy I delivered at Gerbail'],['4 of 6','2026 days predicted within 5%'],['1 per 10 / 25','VIP and normal staffing model (tile 5)']],tile:'t2'},
+ {t:'A proactive approach to continuous improvement',pf:'Predict → check → fix',ev:[['2 fixes','late ticket-sales check; venue-change check'],['After every event','I write a service summary at Crown'],['Weekly','planned vs actual review in my 90-day plan']],loop:true,tile:'t7'},
+];
+$('#reqs').innerHTML=REQ.map((r,i)=>`<div class="rq reveal"${i===0?' open':''}><button aria-expanded="${i===0}" aria-controls="rb${i}"><span class="k">${i+1}</span><b>${r.t}</b><span class="pf">${r.pf}</span>${CHEV}</button>
+ <div class="body" id="rb${i}"><div><div class="in"><div class="ev">${r.ev.map(([a,b])=>`<div><b class="num">${a}</b>${b}</div>`).join('')}</div>
+ ${r.xl?`<div class="xl" aria-label="Formulas from the project workbook"><span class="cell">Events 2026!I3 · staff needed</span><span class="f" data-type='=ROUNDUP(G3/IF(F3="VIP",Inputs!$B$3,Inputs!$B$4),0)'></span><span class="cell">Crowd Forecast!N5 · 2026 prediction</span><span class="f" data-type='=ROUND(L5*(1+M5),0)    M5 = (L5/I5)^(1/3)-1'></span></div>`:''}
+ ${r.loop?`<div class="loop" aria-label="Improvement loop"><span>Predict</span><em>→</em><span>Roster</span><em>→</em><span>Check actuals</span><em>→</em><span>Fix the cause</span><em>↺</em></div>`:''}
+ <button class="go" data-t="${r.tile}">See it on page 1 →</button></div></div></div></div>`).join('');
+$$('.rq > button').forEach(b=>b.onclick=()=>{const r=b.parentElement,o=!r.hasAttribute('open');r.toggleAttribute('open',o);b.setAttribute('aria-expanded',o);if(o)typeXL(r);});
+$$('.go').forEach(b=>b.onclick=()=>{location.hash='dashboard';setTimeout(()=>{const t=document.getElementById(b.dataset.t);t.scrollIntoView({behavior:RM?'auto':'smooth',block:'center'});t.classList.remove('flash');void t.offsetWidth;t.classList.add('flash');},450);});
+function typeXL(r){r.querySelectorAll('.f').forEach((f,j)=>{const s=f.dataset.type;if(RM){f.textContent=s;return;}let n=0;f.textContent='';setTimeout(function t(){n++;f.textContent=s.slice(0,n);if(n<s.length)setTimeout(t,22);},j*900);});}
+let li=0;setInterval(()=>{const s=$$('.loop span');if(!s.length||RM)return;s.forEach((x,i)=>x.classList.toggle('on',i===li%s.length));li++;},900);
+const SRC=[['VRC crowds 2013–25','https://en.wikipedia.org/wiki/Spring_Racing_Carnival'],['Flemington 2026','https://www.austadiums.com/stadiums/flemington/crowds'],['Caulfield 2026','https://www.austadiums.com/stadiums/caulfield-racecourse/crowds'],['MCG attendances','https://www.mcg.org.au/about/history/attendances'],['Brownlow 2026 sold out','https://www.premiumseats.com.au/brownlow-medal-tickets.htm'],['Palladium 1,300','https://www.crownmelbourne.com.au/events-and-conferences/corporate-events/palladium'],['Cup crowd since 2016','https://thestraight.com.au/flemington-melbourne-cup-crowd-surges/']];
+$('#srcs').innerHTML='Sources (public data only, no Crown internal data): '+SRC.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`).join('');
+
+/* ---------- boot ---------- */
+function drawAll(){trend();if(!barsDrawn){bars(true);barsDrawn=true;}else bars(false);}
+let rosterDone=false;const rio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&!rosterDone){rosterDone=true;roster();}}),{threshold:.3});rio.observe($('#t4'));
+stage.resize();stage.layout('Melbourne Cup');stage.start();calc();say(0);
+setView(location.hash.slice(1));
+addEventListener('resize',()=>{moveInd();stage.resize();});
+const rd=()=>{trend();bars(false);};matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rd);new MutationObserver(rd).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+document.fonts&&document.fonts.ready.then(moveInd);
+</script>
+
+</body>
+</html>
